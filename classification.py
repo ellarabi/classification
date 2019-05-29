@@ -3,7 +3,9 @@ import sys
 import codecs
 import collections
 
-from sklearn import cross_validation
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import SelectKBest
 from sklearn import preprocessing
@@ -213,12 +215,13 @@ class Classification:
         warnings.filterwarnings("ignore")
 
         # define 10-fold cross-validation with data shuffling
-        kf = cross_validation.KFold(instances, n_folds=10, shuffle=True)
+        kf = KFold(n_splits=10, shuffle=True)
+        kf.get_n_splits(instances)
 
         # classify with logistic regression
         norm_text_quantified = MathUtils.normalize(text_quantified)
         clf = LogisticRegression().fit(norm_text_quantified, labels)  # classification
-        scores = cross_validation.cross_val_score(clf, norm_text_quantified, labels, cv=kf)
+        scores = cross_val_score(clf, norm_text_quantified, labels, cv=kf)
         self._check_confusion(clf, norm_text_quantified, labels, kf)
 
         return scores.mean()
@@ -625,7 +628,7 @@ class Classification:
 
     # end def
 
-    def cross_validate(self, cfg_filename):
+    def do_cross_validate(self, cfg_filename):
         """
 		the entire process of loading data, chunking, feature extraction and classification
 		:param cfg_filename: file where classification configuration is kept
@@ -802,7 +805,7 @@ if __name__ == '__main__':
     cl = Classification()
 
     # invocation: python classification.py input.data.cfg
-    cl.cross_validate(sys.argv[1])  # standard evaluation and select k-best
+    cl.do_cross_validate(sys.argv[1])  # standard evaluation and select k-best
     # cl.train_predict(sys.argv[1], sys.argv[2])
 
 # end if
